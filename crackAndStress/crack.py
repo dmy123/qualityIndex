@@ -1,4 +1,5 @@
 import math
+import time
 
 def fs(Ts, T, Tl):  # 固相率
     if T < Ts:
@@ -24,15 +25,21 @@ def crack(MiddleTemp_all, var_XNumber, var_X, var_YNumber, var_Y, Time_all, var_
     det_S_xy = [0] * Time_all  # 每次总面积变化
     S_xy = [0] * Time_all
     # 找到不具备补缩能力的时间
+    start_time = time.time()
     for t in range(Time_all):
         if fs(var_SodTemp, MiddleTemp_all[0][0][t], var_liqTemp) >= fso:
             start_t = t + 1
             break
+    end_time = time.time()
+    cal_time = end_time - start_time
+    # print('找到不具备补缩能力的时间：', cal_time)
+    # print(start_t)
     # 计算
     sum2 = 0  # 实际总和面积
     x = 0
     y = 0
 
+    start_time = time.time()
     for t in range(start_t, Time_all):
         for i in range(var_XNumber):
             for j in range(var_YNumber):
@@ -69,4 +76,7 @@ def crack(MiddleTemp_all, var_XNumber, var_X, var_YNumber, var_Y, Time_all, var_
     # print("tu",det_S_xy)
     # print(S_xy)
     # print(x_nxny)
+    end_time = time.time()
+    cal_time = end_time - start_time
+    # print('crack时间：', cal_time)
     return det_S_xy[Time_all - 1], det_S_xy

@@ -1,5 +1,9 @@
 import math
 
+# 1.计算下一时刻温度场
+# 2.计算整个温度场
+# 3.计算冶金准则
+
 #计算下一时刻温度场
 def two_densonal_diff(h, var_deltTime, middle_temp, var_XNumber, var_YNumber, var_X, var_Y, var_temperatureWater,
                       var_rouS, var_rouL, var_specificHeatS, var_specificHeatL, var_TconductivityS, var_TconductivityL,
@@ -93,6 +97,51 @@ def two_densonal_diff(h, var_deltTime, middle_temp, var_XNumber, var_YNumber, va
     return next_temp
 
 #计算整个温度场
+# def steady_temp_cal(var_dis, var_VcastOriginal, var_deltTime, MiddleTemp, var_XNumber, var_YNumber, var_X, var_Y,
+#                     var_temperatureWater, var_rouS, var_rouL, var_specificHeatS, var_specificHeatL, var_TconductivityS,
+#                     var_TconductivityL, var_liqTemp, var_SodTemp, var_m, var_latentHeatofSolidification, Time_all,
+#                     time_Mold, var_h_initial, var_sliceNumber, var_castingTemp):
+#     NextTemp = [([0] * var_YNumber) for i in range(var_XNumber)]
+#     MiddleTemp_all = [0] * var_XNumber
+#     for i in range(var_XNumber):
+#         MiddleTemp_all[i] = [0] * var_YNumber
+#     for i in range(var_XNumber):
+#         for j in range(var_YNumber):
+#             MiddleTemp_all[i][j] = [0] * Time_all
+#     t = []
+#     for i in range(Time_all):
+#         t.append([[0 for i in range(var_XNumber)] for j in range(var_YNumber)])
+#
+#     for stepTime in range(Time_all):
+#         if stepTime <= time_Mold:
+#             tTime = var_deltTime * (stepTime + 1);
+#             h = 1000 * (0.07128 * math.exp(-tTime) + 2.328 * math.exp(-tTime / 9.5) + 0.698)
+#             NextTemp = two_densonal_diff(h, var_deltTime, MiddleTemp, var_XNumber, var_YNumber, var_X, var_Y,
+#                                          var_temperatureWater, var_rouS, var_rouL, var_specificHeatS, var_specificHeatL,
+#                                          var_TconductivityS, var_TconductivityL, var_liqTemp, var_SodTemp, var_m,
+#                                          var_latentHeatofSolidification)
+#         else:
+#             disNow = var_dis[0] + stepTime * var_VcastOriginal * var_deltTime
+#             if var_dis[1] <= disNow <= var_dis[2]:
+#                 h = var_h_initial[0]
+#             if var_dis[2] < disNow <= var_dis[3]:
+#                 h = var_h_initial[1]
+#             if var_dis[3] < disNow <= var_dis[4]:
+#                 h = var_h_initial[2]
+#             if var_dis[4] < disNow <= var_dis[5]:
+#                 h = var_h_initial[3]
+#             NextTemp = two_densonal_diff(h, var_deltTime, MiddleTemp, var_XNumber, var_YNumber, var_X, var_Y,
+#                                          var_temperatureWater, var_rouS, var_rouL, var_specificHeatS, var_specificHeatL,
+#                                          var_TconductivityS, var_TconductivityL, var_liqTemp, var_SodTemp, var_m,
+#                                          var_latentHeatofSolidification)
+#         for i in range(var_XNumber):
+#             for j in range(var_YNumber):
+#                 MiddleTemp[i][j] = NextTemp[i][j]
+#                 MiddleTemp_all[i][j][stepTime] = NextTemp[i][j]
+#                 t[stepTime][i][j] = NextTemp[i][j]
+#     return MiddleTemp_all, t
+
+#计算整个温度场
 def steady_temp_cal(var_dis, var_VcastOriginal, var_deltTime, MiddleTemp, var_XNumber, var_YNumber, var_X, var_Y,
                     var_temperatureWater, var_rouS, var_rouL, var_specificHeatS, var_specificHeatL, var_TconductivityS,
                     var_TconductivityL, var_liqTemp, var_SodTemp, var_m, var_latentHeatofSolidification, Time_all,
@@ -104,9 +153,6 @@ def steady_temp_cal(var_dis, var_VcastOriginal, var_deltTime, MiddleTemp, var_XN
     for i in range(var_XNumber):
         for j in range(var_YNumber):
             MiddleTemp_all[i][j] = [0] * Time_all
-    t = []
-    for i in range(Time_all):
-        t.append([[0 for i in range(var_XNumber)] for j in range(var_YNumber)])
 
     for stepTime in range(Time_all):
         if stepTime <= time_Mold:
@@ -134,8 +180,7 @@ def steady_temp_cal(var_dis, var_VcastOriginal, var_deltTime, MiddleTemp, var_XN
             for j in range(var_YNumber):
                 MiddleTemp[i][j] = NextTemp[i][j]
                 MiddleTemp_all[i][j][stepTime] = NextTemp[i][j]
-                t[stepTime][i][j] = NextTemp[i][j]
-    return MiddleTemp_all, t
+    return MiddleTemp_all
 
 #冶金准则
 def constrain_punish(t, tl, t_l, time_Mold, var_XNumber, var_YNumber, var_SodTemp, strand_shell_set_loc,

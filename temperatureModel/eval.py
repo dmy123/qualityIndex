@@ -7,6 +7,9 @@ import time
 from timeit import default_timer
 import scipy.io as scio
 
+# 测试用
+# 预测数据并与实际数据对比
+
 torch.manual_seed(0)
 np.random.seed(0)
 
@@ -147,10 +150,13 @@ ntest = 40
 # sub = 4
 sub = 1
 # sub_t = 4
-sub_t = 1
-S = 32
-T_in = 960
-T = 960
+sub_t = 3
+# S = 32
+# T_in = 480
+# T = 1440
+S = 16
+T_in = 48
+T = 96
 
 indent = 3
 
@@ -167,7 +173,7 @@ print(test_a.shape, test_u.shape)
 # T = T * (4//sub_t)
 S = S * (1//sub)
 T = T * (1//sub_t)
-
+T = T_in
 #test_a = test_a.reshape(ntest,S,S,1,T_in).repeat([1,1,1,T,1])
 test_a = test_a.reshape(ntest,S,S,T,1)
 print(test_a.shape)
@@ -182,6 +188,7 @@ gridt = gridt.reshape(1, 1, 1, T, 1).repeat([1, S, S, 1, 1])
 test_a = torch.cat((gridx.repeat([ntest,1,1,1,1]), gridy.repeat([ntest,1,1,1,1]),
                        gridt.repeat([ntest,1,1,1,1]), test_a), dim=-1)
 
+
 t2 = default_timer()
 print('preprocessing finished, time used:', t2-t1)
 device = torch.device('cuda')
@@ -190,13 +197,15 @@ device = torch.device('cuda')
 # width = 20
 
 # load model
-model = torch.load('model/temperature_field_240_32_32_1920_2021_1_11')
+model = torch.load('model/temperature_field_240_16_16_96_2021_2_02')
 # model = Net2d(modes, width).cuda()
 
 print(model.count_params())
 
 # test
 test_loader = torch.utils.data.DataLoader(torch.utils.data.TensorDataset(test_a, test_u), batch_size=1, shuffle=False)
+print("test_a.shape",test_a.shape)
+print("test_u.shape",test_u.shape)
 myloss = LpLoss(size_average=False)
 pred = torch.zeros(test_u.shape)
 index = 0
@@ -207,6 +216,7 @@ with torch.no_grad():
         x, y = x.cuda(), y.cuda()
         start_time = time.time()
         out = model(x)
+        print(out.size())
         pred[index] = out
         end_time = time.time()
         cal_time = end_time - start_time
@@ -226,8 +236,8 @@ print(res_a.shape)
 print(pred.cpu().numpy().shape)
 result = np.concatenate((res_a,pred.cpu().numpy()),axis = 3)
 print(result.shape)
-# path = 'temperature_field_eval'
-# scipy.io.savemat('pred/'+path+'.mat', mdict={'pred': pred.cpu().numpy(), 'u': test_u.cpu().numpy()})
+path = 'temperature_field_eval'
+scipy.io.savemat('pred/'+path+'.mat', mdict={'pred': pred.cpu().numpy(), 'u': test_u.cpu().numpy()})
 # path= 'temperature_field_result'
 # scipy.io.savemat('pred/'+path+'.mat', mdict={'pred': pred.cpu().numpy(), 'u': test_u.cpu().numpy()})
 

@@ -14,7 +14,7 @@ class ContinuousCastVariable(object):
         self.var_Y = 0.16  # 铸坯厚度
         self.var_Z = 7.68
         self.deltZ = self.var_Z / self.var_ZNumber  # 拉皮方向的空间间隔
-        self.middle_temp = [([1530] * self.var_XNumber) for i in range(self.var_XNumber)]
+        # self.middle_temp = [([t_cast] * self.var_XNumber) for i in range(self.var_XNumber)]
         self.var_temperatureWater = 30
         self.var_rouS = 7800
         self.var_rouL = 7200

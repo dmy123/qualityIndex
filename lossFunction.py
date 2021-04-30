@@ -12,6 +12,9 @@ from GetOneTemperatureField import getOneTempField
 from pakage import continuousCastVariable
 import time
 
+# 计算温度场和应力场及相应指标
+# 计算损失函数
+
 torch.manual_seed(0)
 np.random.seed(0)
 
@@ -143,27 +146,41 @@ class Net2d(nn.Module):
 
         return c
 
-def tempCrackAndStress(var_h_initial,v_cast,t_cast,TraditionNotFno):
+def tempCrackAndStress(var_h_initial,v_cast,t_cast,TraditionNotFno,model):
     ccv = continuousCastVariable.ContinuousCastVariable(var_h_initial, v_cast, t_cast)
     start_time = time.time()
     if (TraditionNotFno):
-        print('温度场不加速')
+        # print('温度场不加速')
         MiddleTemp_all22, t = one_example_temp_cal(ccv)
     else:
-        print('温度场加速')
-        MiddleTemp_all22, t = getOneTempField(ccv)
+        # print('温度场加速')
+        MiddleTemp_all22, t = getOneTempField(ccv,model)
     end_time = time.time()
     cal_time = end_time - start_time
-    print('温度场计算时间：', cal_time)
+    # print('温度场计算时间：', cal_time)
+    # print('MiddleTemp_all22',type(MiddleTemp_all22))
+    # print('t', type(t))
+    start_time = time.time()
     result_crack, crack_list = crack(MiddleTemp_all22, ccv.var_XNumber, ccv.var_X, ccv.var_YNumber, ccv.var_Y, ccv.Time_all, ccv.var_liqTemp,
                                      ccv.var_SodTemp)  # 缩孔
+    end_time = time.time()
+    cal_time = end_time - start_time
+    # print('缩孔计算时间：', cal_time)
+    start_time = time.time()
     stress, estress, strain, f2 = solver(ccv.var_XNumber, ccv.var_YNumber, ccv.var_X/ccv.var_XNumber, ccv.var_Y/ccv.var_YNumber, t, int(ccv.t_l[-3]), int(ccv.t_l[-1]))  # 计算节点位移
     stress, estress1, strain, f3 = solver(ccv.var_XNumber, ccv.var_YNumber, ccv.var_X/ccv.var_XNumber, ccv.var_Y/ccv.var_YNumber, t, int(ccv.t_l[-2]), int(ccv.t_l[-1]))  # 计算节点位移
     stress, estress1, strain, f4 = solver(ccv.var_XNumber, ccv.var_YNumber, ccv.var_X/ccv.var_XNumber, ccv.var_Y/ccv.var_YNumber, t, int(ccv.t_l[-1]), int(ccv.t_l[-1]))  # 计算节点位移
     stress, estress1, strain, f1 = solver(ccv.var_XNumber, ccv.var_YNumber, ccv.var_X/ccv.var_XNumber, ccv.var_Y/ccv.var_YNumber, t, int(ccv.t_l[-4]), int(ccv.t_l[-1]))  # 计算节点位移
+    end_time = time.time()
+    cal_time = end_time - start_time
+    # print('裂纹计算时间：', cal_time)
+    start_time = time.time()
     mental_punish = constrain_punish(np.array(t), ccv.var_dis, ccv.t_l, ccv.time_Mold, ccv.var_XNumber, ccv.var_YNumber, ccv.var_SodTemp,
                                      ccv.strand_shell_set_loc, ccv.max_surface_temperature, ccv.min_surface_temperature, ccv.temp_rise,
                                      ccv.D_T_uplim, ccv.D_T_downlim, ccv.straighten_point, ccv.Tj_min, ccv.Tj_max)
+    end_time = time.time()
+    cal_time = end_time - start_time
+    # print('冶金准则计算时间：', cal_time)
 
     # stress, estress, strain, f2 = solver(20, 20, 0.1, 0.1, t, int(t_l[-3]), int(t_l[-1]))  # 计算节点位移
     # stress, estress1, strain, f3 = solver(20, 20, 0.1, 0.1, t, int(t_l[-2]), int(t_l[-1]))  # 计算节点位移
@@ -171,17 +188,14 @@ def tempCrackAndStress(var_h_initial,v_cast,t_cast,TraditionNotFno):
     # stress, estress1, strain, f1 = solver(20, 20, 0.1, 0.1, t, int(t_l[-4]), int(t_l[-1]))  # 计算节点位移
     return f1 / 7, result_crack, f2, f3, mental_punish, t, crack_list, strain, estress, f4 / 7
 
-def lossFunction(var_h_initial,v_cast,t_cast,TraditionNotFno):
+def lossFunction(var_h_initial,v_cast,t_cast,TraditionNotFno,model):
     start_time = time.time()
-    a,b,c,f,g,t,crack_list,strain,estress,f4 = tempCrackAndStress(var_h_initial, v_cast, t_cast,TraditionNotFno)
+    a,b,c,f,g,t,crack_list,strain,estress,f4 = tempCrackAndStress(var_h_initial, v_cast, t_cast,TraditionNotFno,model)
     end_time = time.time()
     cal_time = end_time - start_time
-    print("计算一次lossFunction：", cal_time)
-    print(type(a),type(b),type(c),type(f),type(g),type(t),type(crack_list),type(strain),type(estress),type(f4))
-    print(a.shape, b, c.shape, f.shape, np.array(g).shape, np.array(t).shape, np.array(crack_list).shape,
-          np.array(strain).shape, np.array(estress).shape, f4.shape)
-    print(a, b, c, f, g, np.array(t).shape, np.array(crack_list).shape,
-          np.array(strain).shape, np.array(estress).shape, f4)
+    # print("计算一次lossFunction：", cal_time)
+    # print(a, b, c, f, g, np.array(t).shape, np.array(crack_list).shape,
+    #       np.array(strain).shape, np.array(estress).shape, f4)
     return 0.025*a+0.28*c+0.28*f+0.198*f4+0.236*b+50*g[-1]
     # a, b, c, f, t, crack_list, strain, estress, f4 = tempCrackAndStredd(var_h_initial, v_cast, t_cast)
     # return 0.025*a+0.28*c+0.28*f+0.198*f4+0.236*b
@@ -190,5 +204,7 @@ def lossFunction(var_h_initial,v_cast,t_cast,TraditionNotFno):
 # v_cast = 0.6
 # t_cast = 1530
 # TraditionNotFno = 1    #温度场不加速
-# # TraditionNotFno = 0  #温度场加速
-# print(lossFunction(var_h_initial,v_cast,t_cast,TraditionNotFno))
+# TraditionNotFno = 0  #温度场加速
+# # model = torch.load('/tmp/pycharm_project_82/temperature_field_240_16_16_96_2021_2_02')
+# model = torch.load('/tmp/pycharm_project_82/temperatureModel/model/temperature_field_240_16_16_96_2021_2_02')
+# print(lossFunction(var_h_initial,v_cast,t_cast,TraditionNotFno,model))

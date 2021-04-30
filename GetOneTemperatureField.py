@@ -12,6 +12,8 @@ from timeit import default_timer
 import scipy.io
 from temperatureModel.temperatureField.temperatureFieldCal import onetempfieldcal
 
+# 根据输入温度场预测未来温度场
+
 torch.manual_seed(0)
 np.random.seed(0)
 
@@ -143,8 +145,7 @@ class Net2d(nn.Module):
 
         return c
 
-def getOneTempField(ccv):
-    t1 = default_timer()
+def getOneTempField(ccv,model):
     MiddleTemp_all = onetempfieldcal(ccv)
 
     ntest = 1
@@ -155,7 +156,8 @@ def getOneTempField(ccv):
     sub_t = 1
     S = 32
     T_in = ccv.Time_all_a
-    T = ccv.Time_all - ccv.Time_all_a
+    T = ccv.Time_all_a
+    # T = ccv.Time_all - ccv.Time_all_a
 
     indent = 3
 
@@ -166,14 +168,11 @@ def getOneTempField(ccv):
     test_u = torch.from_numpy(test_u).float()
     res_a = test_a
 
-    # print(test_a.shape, test_u.shape)
-
     # pad the location information (s,t)
     S = S * (1//sub)
     T = T * (1//sub_t)
 
     test_a = test_a.reshape(ntest,S,S,T,1)
-    # print(test_a.shape)
 
     gridx = torch.tensor(np.linspace(0, 1, S), dtype=torch.float)
     gridx = gridx.reshape(1, S, 1, 1, 1).repeat([1, 1, S, T, 1])
@@ -187,17 +186,6 @@ def getOneTempField(ccv):
                         test_a),
                        dim=-1)
 
-    t2 = default_timer()
-    # print('preprocessing finished, time used:', t2-t1)
-    device = torch.device('cuda')
-
-    # modes = 12
-    # width = 20
-
-    # load model
-    # model = torch.load('/tmp/pycharm_project_82/temperatureModel/model/temperature_field_240_32_32_1920_2021_1_11')
-    model = torch.load('/tmp/pycharm_project_82/temperature_field_240_32_32_1920_2021_1_11')
-
     # test
     test_loader = torch.utils.data.DataLoader(torch.utils.data.TensorDataset(test_a, test_u), batch_size=1,
                                               shuffle=False)
@@ -206,32 +194,11 @@ def getOneTempField(ccv):
     with torch.no_grad():
         for x, y in test_loader:
             x, y = x.cuda(), y.cuda()
-            start_time = time.time()
             out = model(x)
             pred[index] = out
-            end_time = time.time()
-            cal_time = end_time - start_time
-            print("计算输出温度场时间：", cal_time)
             index = index + 1
-
-    # path = 'one_temperature_field_eval_pred_u'
-    # scipy.io.savemat(path+'.mat', mdict={'pred': pred.cpu().numpy(), 'u': test_u.cpu().numpy()})
-    path = 'one_temperature_field_result'
-    res_MiddleTemp_all = np.concatenate((res_a,pred.cpu().numpy()),axis = 3)
-    res_t= np.zeros((res_MiddleTemp_all.shape[0],res_MiddleTemp_all.shape[3],res_MiddleTemp_all.shape[1],res_MiddleTemp_all.shape[2]))
-    # print(res_MiddleTemp_all.shape)
+    res_MiddleTemp_all = np.concatenate((res_a, pred.cpu().numpy()), axis=3)[0]
     # 转换
-    for stepTime in range(ccv.Time_all):
-        for i in range(ccv.var_XNumber):
-            for j in range(ccv.var_YNumber):
-                res_t[0][stepTime][i][j] = res_MiddleTemp_all[0][i][j][stepTime]
-    # scipy.io.savemat(path+'.mat', mdict={'temperature_field_result_res_MiddleTemp_all':res_MiddleTemp_all,'temperature_field_result_res_t':res_t})
-    return res_MiddleTemp_all[0],res_t[0]
+    res_t = res_MiddleTemp_all.transpose(2,1,0).swapaxes(1,2)
+    return res_MiddleTemp_all.tolist(),res_t.tolist()
 
-
-# cost = 0
-# for time in range(960):
-#     for x in range(S):
-#         for y in range(S):
-#             cost = cost + pow(pred[0][x][y][time] -test_u[0][x][y][time],2)
-# print('花费：',cost/960)
