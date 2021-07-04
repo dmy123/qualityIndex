@@ -159,7 +159,7 @@ def main():
     dimension = 4
     feasible_region = np.array([[8, 13], [35, 45], [20, 25], [12, 17]])
     r = np.array([0.1, 0.2, 0.1, 0.1])
-    test_times = 2
+    test_times = 1
     for i in range(test_times):
         print("第",i+1,"次实验")
         ASR(dimension, feasible_region, r)
@@ -182,7 +182,7 @@ def ASR(dimension, feasible_region, r):
     # iterations = 1000001
     # iterations = 800
     iterations = 200
-    accepted_count = 1
+    # accepted_count = 1
     simulation_budget = 1
 
     accepted_set = np.zeros((20000, dimension + 1))
@@ -396,11 +396,11 @@ def function(X,model):
     h.append(h_q(X[3]))
     # print(X)
     add_noise = 0
-    # return  lossFunction(h,0.53,1530,0,model)-0.4        # 加速
+    return  lossFunction(h,0.53,1530,0,model)-111 ,add_noise       # 加速
     # return lossFunction(h, 0.53, 1530, 1, model) - 0.4,add_noise     # 不加速
-    add_noise = max(0.4, min(0.6, 0.53 + noise(0, 0.1)))
-    add_noise = round(add_noise, 2)
-    return lossFunction(h, add_noise, 1530, 1, model), add_noise  # 不加速，加噪音
+    # add_noise = max(0.4, min(0.6, 0.53 + noise(0, 0.1)))
+    # add_noise = round(add_noise, 2)
+    # return lossFunction(h, add_noise, 1530, 1, model), add_noise  # 不加速，加噪音
     # return h[0]+h[1]+h[2]+h[3]
     # add_noise = max(0.4, min(0.6, 0.53 + noise(0, 0.1)))
     # # add_noise = max(0.4, min(0.6, 0.6 + noise(0, 0.1)))

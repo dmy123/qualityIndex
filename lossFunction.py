@@ -201,10 +201,12 @@ def lossFunction(var_h_initial,v_cast,t_cast,TraditionNotFno,model):
     # return 0.025*a+0.28*c+0.28*f+0.198*f4+0.236*b
 
 # var_h_initial=[63.65,138.36,100.87,80.363]
-# v_cast = 0.6
-# t_cast = 1530
-# TraditionNotFno = 1    #温度场不加速
+
+var_h_initial=[25.5,28.5,9.15,6.8]
+v_cast = 0.6
+t_cast = 1530
+TraditionNotFno = 1    #温度场不加速
 # TraditionNotFno = 0  #温度场加速
-# # model = torch.load('/tmp/pycharm_project_82/temperature_field_240_16_16_96_2021_2_02')
-# model = torch.load('/tmp/pycharm_project_82/temperatureModel/model/temperature_field_240_16_16_96_2021_2_02')
-# print(lossFunction(var_h_initial,v_cast,t_cast,TraditionNotFno,model))
+# model = torch.load('/tmp/pycharm_project_82/temperature_field_240_16_16_96_2021_2_02')
+model = torch.load('/tmp/pycharm_project_82/temperatureModel/model/temperature_field_240_16_16_96_2021_2_02')
+print(lossFunction(var_h_initial,v_cast,t_cast,TraditionNotFno,model))

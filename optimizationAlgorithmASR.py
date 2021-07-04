@@ -175,8 +175,8 @@ def ASR(dimension, feasible_region, r):
     i = 1
     k = 0
     # iterations = 100000
-    # iterations = 800
-    iterations = 200
+    iterations = 4
+    # iterations = 200
     accepted_count = 1
     simulation_budget = 1
 
